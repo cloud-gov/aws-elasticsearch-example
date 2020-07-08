@@ -1,10 +1,8 @@
-# aws-elasticsearch-example
+# aws-elasticsearch-example [Work in progress]
 
-## Why this project
+## About
 
-Here are the goals of this project and how we'll measure its success.
-
-- 
+This repository has a series of examples for migrating your cloud.gov applications to use the new Elasticsearch service using [AWS Elastisearch](https://aws.amazon.com/elasticsearch-service/).
 
 ## Contributing
 
