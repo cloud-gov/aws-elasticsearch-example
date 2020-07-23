@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+from cfenv import AppEnv
+from elasticsearch import Elasticsearch, RequestsHttpConnection
+from requests_aws4auth import AWS4Auth
+
+SERVICE = "es"
+REGION = "us-gov-west-1"
+
+# Small example document to load
+index = "movies"
+doc_type = "_doc"
+id = "5"
+document = {
+    "title": "Moneyball",
+    "director": "Bennett Miller",
+    "year": "2011"
+}
+
+
+def get_es_credentials(service_name):
+    """
+    Get elasticsearch credentials via the service name.
+    """
+    env = AppEnv()
+    service = env.get_service(name=service_name)
+    return service.credentials
+
+
+def new_es_client(service_name):
+    """
+    Create an elasticsearch client for the new AWS Elasticsearch
+    service via the service name.
+    """
+    credentials = get_es_credentials(service_name)
+    host = credentials["host"]
+    port = credentials["port"]
+    access_key = credentials["access_key"]
+    secret_key = credentials["secret_key"]
+
+    aws_auth = AWS4Auth(
+        access_key,
+        secret_key,
+        REGION,
+        SERVICE
+    )
+
+    return Elasticsearch(
+        hosts = [{"host": host, "port": port}],
+        http_auth = aws_auth,
+        use_ssl = True,
+        verify_certs = True,
+        connection_class = RequestsHttpConnection
+    )
+
+def old_es_client(service_name):
+    """
+    Create an elasticsearch client for the legacy Elasticsearch
+    service via the service name.
+    """
+    credentials = get_es_credentials(service_name)
+    uri = credentials["uri"]
+
+    return Elasticsearch(hosts = [uri], use_ssl=False, verify_certs=False)
+
+
+def index_and_get(client, options = dict()):
+    """
+    Use an elasticsearch client to create an index then
+    print the results of getting that index.
+    """
+
+    client.index(
+        index=options["index"],
+        doc_type=options["doc_type"],
+        id=options["id"],
+        body=options["body"]
+    )
+    result = client.get(
+        index=options["index"],
+        doc_type=options["doc_type"],
+        id=options["id"]
+    )
+    print(result)
+
+
+if __name__ == "__main__":
+    sample_data_options = {
+        "index": index,
+        "doc_type": doc_type,
+        "id": id,
+        "body": document
+    }
+
+    new_client = new_es_client("new-es-service")
+    index_and_get(new_client, sample_data_options)
+
+    if False:
+        old_client = old_es_client("old-es-service")
+        index_and_get(old_client, sample_data_options)
