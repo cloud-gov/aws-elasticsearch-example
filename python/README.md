@@ -45,7 +45,13 @@ The following apps are deployed into your space:
 
 ## Running the task
 
-To test loading some sample sample data, we will run the task. This will run a simple python script found in the [`run`](./run) file grabs our credentials to the new AWS Elasticsearch service, uploads a document and the gets that document back from the service instance.
+With the `elastic-tasks` app deployed we can run the task to test loading sample data.  This involves running a small Python script found in the [`run`](./run) directory, which performs the following steps:
+
+- Retrieves our credentials to the new AWS Elasticsearch service
+- Uploads a document
+- Retrieves the document back from the service instance
+
+We can start the task with the following command:
 
 ```bash
 ## Run the task and call the run script
