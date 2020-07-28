@@ -48,7 +48,7 @@ The following apps are deployed into your space:
 To test loading some sample sample data, we will run the task. This will run a simple python script found in the [`run`](./run) file grabs our credentials to the new AWS Elasticsearch service, uploads a document and the gets that document back from the service instance.
 
 ```bash
-## Run the task and all the run script
+## Run the task and call the run script
 $ cf run-task elastic-tasks "./run load -s new-es-service"
 # Output
 # Creating task for app elastic-tasks in org my-org / space my-space as admin...
