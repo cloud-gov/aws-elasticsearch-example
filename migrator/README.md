@@ -1,7 +1,7 @@
 Migrating Elasticsearch services with snapshots
 ===============================================
 
-The following with example CF deployment is an overview of migrating to the new AWS Elasticsearch service using a snapshot from the legacy Elasticsearch service.
+The following example CF deployment is an overview of migrating to the new AWS Elasticsearch service using a snapshot from the legacy Elasticsearch service.
 
 ## Getting started
 
