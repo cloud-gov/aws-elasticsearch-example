@@ -40,8 +40,7 @@ $ cd python
 $ cf push -f manifest.yml
 ```
 
-The following apps are deployed into your space:
-- `elastic-tasks` is a CF app task runner used to load data and indices into the elasticsearch services.
+When the `cf push` command finishes an `elastic-tasks` app task runner will be deployed, which is used to load  data and indices into the Elasticsearch services.
 
 ## Running the task
 
