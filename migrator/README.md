@@ -35,7 +35,7 @@ $ cf create-service s3 basic snapshot-s3-service
 To continue with this example, please clone or download this repository so you can follow along and run the steps from your computer.
 
 ```bash
-## Clone and navitgate into example repository
+## Clone and navigate into the example repository
 $ git clone https://github.com/cloud-gov/aws-elasticsearch-example && cd aws-elasticsearch-example
 ```
 
