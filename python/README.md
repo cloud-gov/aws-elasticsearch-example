@@ -30,9 +30,13 @@ $ git clone https://github.com/cloud-gov/aws-elasticsearch-example && cd aws-ela
 
 ## Deploying
 
-The following deployment instructions assumes that you have cloned or downloaded this `aws-elasticsearch-example` and have navigated into the root of this directory (`$ cd python/`).  From the `python` directory push the CF deployment to you cloud.gov space.
+From the root repository directory (`aws-elasticsearch-example`), navigate into the `python` directory and push the CF deployment to you cloud.gov space:
 
 ```bash
+# Navigate to the Python subdirectory
+$ cd python
+
+# Push the application
 $ cf push -f manifest.yml
 ```
 
