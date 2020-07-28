@@ -32,7 +32,7 @@ Create a new S3 service to store the snapshot from the Elasticsearch service
 $ cf create-service s3 basic snapshot-s3-service
 ```
 
-To get started with this example, please clone or download this repository so you can follow along and run the steps from your computer.
+To continue with this example, please clone or download this repository so you can follow along and run the steps from your computer.
 
 ```bash
 ## Clone and navitgate into example repository
