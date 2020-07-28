@@ -41,9 +41,13 @@ $ git clone https://github.com/cloud-gov/aws-elasticsearch-example && cd aws-ela
 
 ## Deploying
 
-The following deployment instructions assumes that you have cloned or downloaded this `aws-elasticsearch-example` and have navigated into the root of this directory (`$ cd migrator/`).  From the `migrator` directory push the CF deployment to you cloud.gov space.
+From the root directory of the repository that you should now be in (`aws-elasticsearch-example`), navigate to the `migrator` directory and push the CF deployment to your cloud.gov space:
 
 ```bash
+# Navigate to the migrator sub-directory
+$ cd migrator
+
+# Push the application
 $ cf push -f manifest.yml
 ```
 
