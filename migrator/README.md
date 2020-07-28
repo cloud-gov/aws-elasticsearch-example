@@ -51,8 +51,7 @@ $ cd migrator
 $ cf push -f manifest.yml
 ```
 
-The following apps are deployed into your space:
-- `elastic-migrator` is a CF app task runner used to migrate snapshot data and indices into the elasticsearch services.
+When the `cf push` command finishes an `elastic-migrator` app task runner will be deployed, which is used to migrate snapshot data and indices into the Elasticsearch services.
 
 ## Running migration
 
