@@ -84,11 +84,6 @@ def create_client(service_name):
         ## If the username and password is supplied in the service credentials
         ## Create an Elasticsearch client for the old, kubernetes-broker service
         if "username" in credentials and "password" in credentials:
-
-            ##  Note:
-            ##      The old service only needs to set the "host" value
-            ##      for the Elasticsearch client "hosts" argument based on the service's
-            ##      "URI" value in the "credentials"
             uri = credentials["uri"]
             client = Elasticsearch(hosts = [uri], use_ssl=False, verify_certs=False)
 
@@ -99,18 +94,11 @@ def create_client(service_name):
 
         ## Else, if create an Elasticsearch client for the new, aws-broker service
         else:
-            ##  Note:
-            ##      The new AWS Elasticsearch service needs to set the "host" and "port"
-            ##      for the Elasticsearch client "hosts" argument with addition to
-            ##      the "access_key", "secret_key", "region", and "service" to create the
-            ##      Elasticsearch client "http_auth" argument.
             host = credentials["host"]
             port = credentials["port"]
             access_key = credentials["access_key"]
             secret_key = credentials["secret_key"]
 
-            ##  Note:
-            ##      Creates the "http_auth" value for the Elasticsearch client
             aws_auth = AWS4Auth(
                 access_key,
                 secret_key,
@@ -118,10 +106,6 @@ def create_client(service_name):
                 SERVICE
             )
 
-            ##  Note:
-            ##      Along with the "hosts" and "http_auth" arguments for the Elasticsearch client,
-            ##      you will also need to set the "use_ssl", "verify_certs", and "connection_class"
-            ##      to the following.
             client = Elasticsearch(
                 hosts = [{"host": host, "port": port}],
                 http_auth = aws_auth,
@@ -188,25 +172,26 @@ class ESClient:
             return result
 
 if __name__ == "__main__":
-    args = parser.parse_args()
+    print("TODO - Finish snapshot migration command.")
+    # args = parser.parse_args()
 
-    sample_data_options = {
-        "index": index,
-        "doc_type": doc_type,
-        "id": id,
-        "body": document
-    }
+    # sample_data_options = {
+    #     "index": index,
+    #     "doc_type": doc_type,
+    #     "id": id,
+    #     "body": document
+    # }
 
-    if args.command == "load":
-        try:
-            es_service = ESClient(args.service_name)
-            result = es_service.index_and_get(sample_data_options)
-            print(result)
-        except Exception as err:
-            print("An error occured while running the load command.")
-            sys.exit(err)
+    # if args.command == "load":
+    #     try:
+    #         es_service = ESClient(args.service_name)
+    #         result = es_service.index_and_get(sample_data_options)
+    #         print(result)
+    #     except Exception as err:
+    #         print("An error occured while running the load command.")
+    #         sys.exit(err)
 
-    if args.command == "delete-indices":
-        es_service = ESClient(args.service_name)
-        result = es_service.client.indices.delete(index=sample_data_options["index"])
-        print(result)
+    # if args.command == "delete-indices":
+    #     es_service = ESClient(args.service_name)
+    #     result = es_service.client.indices.delete(index=sample_data_options["index"])
+    #     print(result)

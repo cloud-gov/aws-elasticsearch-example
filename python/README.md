@@ -16,7 +16,7 @@ The following example uses two services already created and available for consum
 $ cf create-service elasticsearch56 medium old-es-service
 
 ### The new elasticsearch service
-$ cf create-service aws-elasticsearch aws-dev new-es-service
+$ cf create-service aws-elasticsearch BETA-es-dev new-es-service
 ```
 
 To get started with this example, please clone or download this repository so you can follow along and run the steps from your computer.
@@ -28,7 +28,7 @@ $ git clone https://github.com/cloud-gov/aws-elasticsearch-example && cd aws-ela
 
 ## Deploying
 
-The following deployment instructions assumes that you have cloned or downloaded this `aws-elasticsearch-example` and have navigated into the root of this directory (`$ cd example/`).  From the `example` directory push the CF deployment to you cloud.gov space.
+The following deployment instructions assumes that you have cloned or downloaded this `aws-elasticsearch-example` and have navigated into the root of this directory (`$ cd python/`).  From the `python` directory push the CF deployment to you cloud.gov space.
 
 ```bash
 $ cf push -f manifest.yml
@@ -43,19 +43,39 @@ To test loading some sample sample data, we will run the task. This will run a s
 
 ```bash
 ## Run the task and all the run script
-$ cf run-task elastic-tasks "./run"
+$ cf run-task elastic-tasks "./run load -s new-es-service"
 # Output
-# Creating task for app elastic-tasks in org cloud-gov-operators / space andrew.burnes as admin...
+# Creating task for app elastic-tasks in org my-org / space my-space as admin...
 # OK
 
 # Task has been submitted successfully for execution.
 # task name:   5baef61c
-# task id:     5
+# task id:     1
 
 
 ## Next you can see the task has run in the recent logs
 $ cf logs --recent elastic-tasks
 # Output
-# [APP/TASK/5baef61c/0] OUT {'_index': 'movies', '_type': '_doc', '_id': '5', '_version': 1, '_seq_no': 0, '_primary_term': 1, 'found': True, '_source': {'title': 'Moneyball', 'director': 'Bennett Miller', 'year': '2011'}}
+# [APP/TASK/5baef61c/0] OUT {'_index': 'movies', '_type': 'doc', '_id': '5', '_version': 1, '_seq_no': 0, '_primary_term': 1, 'found': True, '_source': {'title': 'Moneyball', 'director': 'Bennett Miller', 'year': '2011'}}
 # [APP/TASK/5baef61c/0] OUT Exit status 0
+```
+
+Deleting the sample index
+
+```bash
+## Run the task and all the run script
+$ cf run-task elastic-tasks "./run delete-indices -s new-es-service"
+# Output
+# Creating task for app elastic-tasks in org my-org / space my-space as admin...
+# OK
+
+# Task has been submitted successfully for execution.
+# task name:   5d07a14f
+# task id:     2
+
+
+## Next you can see the task has run in the recent logs
+$ cf logs --recent elastic-tasks
+# Output
+# [APP/TASK/5d07a14f/0] OUT {'acknowledged': True}
 ```

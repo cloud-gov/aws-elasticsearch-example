@@ -1,0 +1,20 @@
+version: "3"
+services:
+  python:
+    build:
+      context: python
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    working_dir: /usr/src/app
+    volumes:
+      - ./python:/usr/src/app
+  migrator:
+    build:
+      context: python
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    working_dir: /usr/src/app
+    volumes:
+      - ./snapshot:/usr/src/app
