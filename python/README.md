@@ -21,7 +21,7 @@ $ cf create-service elasticsearch56 medium old-es-service
 $ cf create-service aws-elasticsearch BETA-es-dev new-es-service
 ```
 
-To get started with this example, please clone or download this repository so you can follow along and run the steps from your computer.
+To continue, please clone or download this repository so you can follow along and run the steps from your computer:
 
 ```bash
 ## Clone and navitgate into example repository
