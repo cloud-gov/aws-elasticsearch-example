@@ -5,7 +5,9 @@ The following example CF deployment is an overview of migrating to the new AWS E
 
 ## Getting started
 
-The following example uses three services to create, store, and restore an Elasticsearch snapshot. The following services created for this example are named `old-es-service` (legacy elasticsearch56 service), `new-es-service` (new aws-elasticsearch service), and `snapshot-s3-service` (AWS S3 storage service).  Before running through this example, make sure to create the three services with the following cli commands:
+The following example uses three services to create, store, and restore an Elasticsearch snapshot. In this example the services are named `old-es-service` (legacy elasticsearch56 service), `new-es-service` (new aws-elasticsearch service), and `snapshot-s3-service` (AWS S3 storage service).
+
+For the first step, create the three services with the following CLI commands:
 
 ```bash
 ##
