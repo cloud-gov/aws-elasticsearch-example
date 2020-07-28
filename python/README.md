@@ -5,7 +5,9 @@ The following example CF deployment is an overview of the new AWS Elasticsearch 
 
 ## Getting started
 
-The following example uses two services already created and available for consumption to your organization and space applications. The following services created for this example are named `old-es-service` (legacy elasticsearch56 service) and `new-es-service` (new aws-elasticsearch service).  Before running through this example, make sure to create the two services with the following cli commands:
+This example uses two services already created and available for consumption to your organization and space applications. The services created for this example are named `old-es-service` (legacy elasticsearch56 service) and `new-es-service` (new aws-elasticsearch service).
+
+First, create the two services with the following CLI commands:
 
 ```bash
 ##
