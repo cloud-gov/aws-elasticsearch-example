@@ -1,7 +1,7 @@
 Python Example
 ==============
 
-The following with example CF deployment is an overview of the new AWS Elasticsearch service and highlights the differences between the legacy `elasticsearch56` and new `aws-elasticsearch` services available in the cloud.gov cloudfoundry marketplace.
+The following example CF deployment is an overview of the new AWS Elasticsearch service and highlights the differences between the legacy `elasticsearch56` and new `aws-elasticsearch` services available in the cloud.gov marketplace.
 
 ## Getting started
 
