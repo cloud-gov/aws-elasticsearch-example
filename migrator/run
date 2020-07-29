@@ -11,58 +11,56 @@ REGION = "us-gov-west-1"
 
 
 # Setup cli
-parser = argparse.ArgumentParser(
-    description="Migrating your CF Redis service to the AWS ElastiCache Redis service.",
-)
+parser = argparse.ArgumentParser(description="Migrating your Elasticsearch service.",)
 
 
 subparsers = parser.add_subparsers(
     dest="command", help="Run <command> help for more information."
 )
 
-## Elasticsearch load command
-parser_delete_indices = subparsers.add_parser(
-    "delete-indices", help="Delete elasticsearch services index with sample document."
+## Elasticsearch migrate command
+parser_migrate = subparsers.add_parser(
+    "migrate", help="Delete elasticsearch services index with sample document."
 )
 
 
-parser_delete_indices.add_argument(
+parser_migrate.add_argument(
     "-s",
-    "--service",
-    dest="service_name",
+    "--src",
+    dest="src_service",
     type=str,
-    help="The name of the elasticsearch service",
+    help="The name of the source elasticsearch service",
     required=True,
 )
 
-## Elasticsearch load command
-parser_load = subparsers.add_parser(
-    "load", help="Load elasticsearch services with sample document."
-)
-
-
-parser_load.add_argument(
-    "-s",
-    "--service",
-    dest="service_name",
+parser_migrate.add_argument(
+    "-d",
+    "--dest",
+    dest="dest_service",
     type=str,
-    help="The name of the elasticsearch service",
+    help="The name of the destination elasticsearch service",
     required=True,
 )
 
+parser_migrate.add_argument(
+    "-b",
+    "--bucket",
+    dest="s3_bucket_service",
+    type=str,
+    help="The name of the S3 bucket service",
+    required=True,
+)
 
 # Small example document to load
-index = "movies"
-doc_type = "doc"
-id = "5"
-document = {
-    "title": "Moneyball",
-    "director": "Bennett Miller",
-    "year": "2011"
+sample_data_options = {
+    "index": "movies",
+    "doc_type": "doc",
+    "id": "1",
+    "body": {"title": "Moneyball", "director": "Bennett Miller", "year": "2011"},
 }
 
 
-def get_es_credentials(service_name):
+def get_service_creds(service_name):
     """
     Get elasticsearch credentials via the service name.
     """
@@ -79,18 +77,15 @@ def create_client(service_name):
     """
 
     try:
-        credentials = get_es_credentials(service_name)
+        credentials = get_service_creds(service_name)
 
         ## If the username and password is supplied in the service credentials
         ## Create an Elasticsearch client for the old, kubernetes-broker service
         if "username" in credentials and "password" in credentials:
             uri = credentials["uri"]
-            client = Elasticsearch(hosts = [uri], use_ssl=False, verify_certs=False)
+            client = Elasticsearch(hosts=[uri], use_ssl=False, verify_certs=False)
 
-            return {
-                "client": client,
-                "broker": "kubernetes-broker"
-            }
+            return {"client": client, "broker": "kubernetes-broker"}
 
         ## Else, if create an Elasticsearch client for the new, aws-broker service
         else:
@@ -99,99 +94,146 @@ def create_client(service_name):
             access_key = credentials["access_key"]
             secret_key = credentials["secret_key"]
 
-            aws_auth = AWS4Auth(
-                access_key,
-                secret_key,
-                REGION,
-                SERVICE
-            )
+            aws_auth = AWS4Auth(access_key, secret_key, REGION, SERVICE)
 
             client = Elasticsearch(
-                hosts = [{"host": host, "port": port}],
-                http_auth = aws_auth,
-                use_ssl = True,
-                verify_certs = True,
-                connection_class = RequestsHttpConnection
+                hosts=[{"host": host, "port": port}],
+                http_auth=aws_auth,
+                use_ssl=True,
+                verify_certs=True,
+                connection_class=RequestsHttpConnection,
             )
 
-            return {
-                "client": client,
-                "broker": "aws-broker"
-            }
+            return {"client": client, "broker": "aws-broker"}
     except Exception as err:
-        print('An error occurred trying to create Elasticsearch client.')
+        print("An error occurred trying to create Elasticsearch client.")
         sys.exit(err)
 
 
 class ESClient:
-    def __init__(self, service_name):
-        service_client = create_client(service_name)
+    def __init__(self, src_service_name, dest_service_name, bucket_service_name):
+        src_client = create_client(src_service_name)
+        dest_client = create_client(dest_service_name)
 
-        self.client = service_client["client"]
-        self.broker = service_client["broker"]
+        self.src_client = src_client["client"]
+        self.src_service_name = src_service_name
+        self.dest_client = dest_client["client"]
+        self.dest_service_name = dest_service_name
+        self.bucket_credentials = get_service_creds(bucket_service_name)
 
+    def _get_service_client(self, service_name):
+        if service_name == self.src_service_name:
+            return self.src_client
 
-    def index_and_get(self, options = dict()):
+        elif service_name == self.dest_service_name:
+            return self.dest_client
+
+        else:
+            sys.exit("Elasticsearch service name not found.")
+
+    def _load_sample_data(self, service_name):
+        sample_data_options = {
+            "index": index,
+            "doc_type": doc_type,
+            "id": id,
+            "body": document,
+        }
+
+        client = self._get_service_client(service_name)
+        result = client.index(sample_data_options)
+        return result
+
+    def create_snapshot_repository(
+        self, service_name, repository_name="es-backup-repository", readonly=False
+    ):
         """
-        Use an elasticsearch client to create an index then
-        print the results of getting that index.
+        Create a repository in S3 to store snapshots
         """
-        client = self.client
-        broker = self.broker
 
-        if broker == "aws-broker":
-            client.index(
-                index=options["index"],
-                doc_type=options["doc_type"],
-                id=options["id"],
-                body=options["body"]
-            )
+        client = self._get_service_client(service_name)
+        settings = {
+            "type": "s3",
+            "settings": {
+                "bucket": self.bucket_credentials["bucket"],
+                "region": self.bucket_credentials["region"],
+                "access_key": self.bucket_credentials["access_key_id"],
+                "secret_key": self.bucket_credentials["secret_access_key"],
+                "readonly": readonly,
+            },
+        }
 
-            result = client.get(
-                index=options["index"],
-                doc_type=options["doc_type"],
-                id=options["id"]
-            )
+        result = client.snapshot.create_repository(repository_name, settings)
 
-            return result
+        return result
 
-        if broker == "kubernetes-broker":
-            client.index(
-                index=options["index"],
-                doc_type=options["doc_type"],
-                id=options["id"],
-                body=options["body"]
-            )
+    def create_snapshot(
+        self,
+        service_name,
+        repository_name="es-backup-repository",
+        snapshot_name="migration_snapshot",
+    ):
+        """
+        Create a snapshot into S3 repository
+        """
 
-            result = client.get(
-                index=options["index"],
-                doc_type=options["doc_type"],
-                id=options["id"]
-            )
+        client = self._get_service_client(service_name)
+        result = client.snapshot.create(repository_name, snapshot_name)
 
-            return result
+        return result
+
+    def delete_snapshot_repository(
+        self, service_name, repository_name="es-backup-repository"
+    ):
+        """
+        Delete a created repository for snapshots
+        """
+        client = self._get_service_client(service_name)
+
+        result = client.snapshot.delete_repository(repository_name)
+
+        return results
+
+    def restore_snapshot(
+        self,
+        service_name,
+        repository_name="es-backup-repository",
+        snapshot_name="migration_snapshot",
+    ):
+        """
+        Restor a snapshot from an S3 repository
+        """
+
+        client = self._get_service_client(service_name)
+        result = client.snapshot.restore(repository_name, snapshot_name)
+
+        return result
+
 
 if __name__ == "__main__":
-    print("TODO - Finish snapshot migration command.")
-    # args = parser.parse_args()
+    args = parser.parse_args()
 
-    # sample_data_options = {
-    #     "index": index,
-    #     "doc_type": doc_type,
-    #     "id": id,
-    #     "body": document
-    # }
+    if args.command == "migrate":
+        try:
+            es_service = ESClient(
+                args.src_service, args.dest_service, args.s3_bucket_service
+            )
 
-    # if args.command == "load":
-    #     try:
-    #         es_service = ESClient(args.service_name)
-    #         result = es_service.index_and_get(sample_data_options)
-    #         print(result)
-    #     except Exception as err:
-    #         print("An error occured while running the load command.")
-    #         sys.exit(err)
+            ## Load sample data
+            src_index_results = es_service.src_client.index(**sample_data_options)
 
-    # if args.command == "delete-indices":
-    #     es_service = ESClient(args.service_name)
-    #     result = es_service.client.indices.delete(index=sample_data_options["index"])
-    #     print(result)
+            ## Create repositories for snapshots
+            src_repo = es_service.create_snapshot_repository(args.src_service)
+            #### Set the snapshot repository to "readonly" for the new service
+            dest_repo = es_service.create_snapshot_repository(
+                args.dest_service, readonly=True
+            )
+
+            ## Create snapshot of legacy service
+            src_snapshot = es_service.create_snapshot(args.src_service)
+
+            ## Restore legacy snapsot into new service
+            restore_result = es_service.restore_snapshot(args.dest_service)
+
+        except Exception as err:
+            print("An error occurred while running the migrate command.")
+            sys.exit(err)

@@ -11,9 +11,7 @@ REGION = "us-gov-west-1"
 
 
 # Setup cli
-parser = argparse.ArgumentParser(
-    description="Migrating your CF Redis service to the AWS ElastiCache Redis service.",
-)
+parser = argparse.ArgumentParser(description="Loading you Elasticsearch service.",)
 
 
 subparsers = parser.add_subparsers(
@@ -55,11 +53,7 @@ parser_load.add_argument(
 index = "movies"
 doc_type = "doc"
 id = "5"
-document = {
-    "title": "Moneyball",
-    "director": "Bennett Miller",
-    "year": "2011"
-}
+document = {"title": "Moneyball", "director": "Bennett Miller", "year": "2011"}
 
 
 def get_es_credentials(service_name):
@@ -90,12 +84,9 @@ def create_client(service_name):
             ##      for the Elasticsearch client "hosts" argument based on the service's
             ##      "URI" value in the "credentials"
             uri = credentials["uri"]
-            client = Elasticsearch(hosts = [uri], use_ssl=False, verify_certs=False)
+            client = Elasticsearch(hosts=[uri], use_ssl=False, verify_certs=False)
 
-            return {
-                "client": client,
-                "broker": "kubernetes-broker"
-            }
+            return {"client": client, "broker": "kubernetes-broker"}
 
         ## Else, if create an Elasticsearch client for the new, aws-broker service
         else:
@@ -111,31 +102,23 @@ def create_client(service_name):
 
             ##  Note:
             ##      Creates the "http_auth" value for the Elasticsearch client
-            aws_auth = AWS4Auth(
-                access_key,
-                secret_key,
-                REGION,
-                SERVICE
-            )
+            aws_auth = AWS4Auth(access_key, secret_key, REGION, SERVICE)
 
             ##  Note:
             ##      Along with the "hosts" and "http_auth" arguments for the Elasticsearch client,
             ##      you will also need to set the "use_ssl", "verify_certs", and "connection_class"
             ##      to the following.
             client = Elasticsearch(
-                hosts = [{"host": host, "port": port}],
-                http_auth = aws_auth,
-                use_ssl = True,
-                verify_certs = True,
-                connection_class = RequestsHttpConnection
+                hosts=[{"host": host, "port": port}],
+                http_auth=aws_auth,
+                use_ssl=True,
+                verify_certs=True,
+                connection_class=RequestsHttpConnection,
             )
 
-            return {
-                "client": client,
-                "broker": "aws-broker"
-            }
+            return {"client": client, "broker": "aws-broker"}
     except Exception as err:
-        print('An error occurred trying to create Elasticsearch client.')
+        print("An error occurred trying to create Elasticsearch client.")
         sys.exit(err)
 
 
@@ -146,8 +129,7 @@ class ESClient:
         self.client = service_client["client"]
         self.broker = service_client["broker"]
 
-
-    def index_and_get(self, options = dict()):
+    def index_and_get(self, options=dict()):
         """
         Use an elasticsearch client to create an index then
         print the results of getting that index.
@@ -155,37 +137,14 @@ class ESClient:
         client = self.client
         broker = self.broker
 
-        if broker == "aws-broker":
-            client.index(
-                index=options["index"],
-                doc_type=options["doc_type"],
-                id=options["id"],
-                body=options["body"]
-            )
+        client.index(**options)
 
-            result = client.get(
-                index=options["index"],
-                doc_type=options["doc_type"],
-                id=options["id"]
-            )
+        result = client.get(
+            index=options["index"], doc_type=options["doc_type"], id=options["id"]
+        )
 
-            return result
+        return result
 
-        if broker == "kubernetes-broker":
-            client.index(
-                index=options["index"],
-                doc_type=options["doc_type"],
-                id=options["id"],
-                body=options["body"]
-            )
-
-            result = client.get(
-                index=options["index"],
-                doc_type=options["doc_type"],
-                id=options["id"]
-            )
-
-            return result
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -194,7 +153,7 @@ if __name__ == "__main__":
         "index": index,
         "doc_type": doc_type,
         "id": id,
-        "body": document
+        "body": document,
     }
 
     if args.command == "load":
@@ -203,7 +162,7 @@ if __name__ == "__main__":
             result = es_service.index_and_get(sample_data_options)
             print(result)
         except Exception as err:
-            print("An error occured while running the load command.")
+            print("An error occurred while running the load command.")
             sys.exit(err)
 
     if args.command == "delete-indices":

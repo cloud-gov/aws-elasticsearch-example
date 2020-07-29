@@ -11,10 +11,10 @@ services:
       - ./python:/usr/src/app
   migrator:
     build:
-      context: python
+      context: migrator
       dockerfile: Dockerfile
     env_file:
       - .env
     working_dir: /usr/src/app
     volumes:
-      - ./snapshot:/usr/src/app
+      - ./migrator:/usr/src/app
