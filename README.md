@@ -1,8 +1,8 @@
-# aws-elasticsearch-example [Work in progress]
+# aws-elasticsearch-example
 
 ## About
 
-This repository has a series of examples for migrating your cloud.gov applications
+This repository is an example for using the Elasticsearch service in your cloud.gov applications
 from using the `elasticsearch56` service running on the `medium-ha` and `medium` plans to the
 `elasticsearch-aws` service running on the `aws-elasticsearch-prod` and `aws-elasticsearch-dev` plans powered by
 [AWS Elastisearch](https://aws.amazon.com/elasticsearch-service/). The new AWS Elasticsearch services provides customers with access the Elasticsearch v7.4; upgrading the current Elasticsearch offering from v5.4.
@@ -44,7 +44,7 @@ The following example compares the difference between creating an elasticsearch 
 $ cf create-service elasticsearch56 medium dev-elastic-service
 
 ### The new way
-$ cf create-service aws-elasticsearch aws-dev dev-elastic-service
+$ cf create-service aws-elasticsearch BETA-es-dev dev-elastic-service
 
 
 ##
@@ -55,7 +55,7 @@ $ cf create-service aws-elasticsearch aws-dev dev-elastic-service
 $ cf create-service elasticsearch56 medium-ha prod-elastic-service
 
 ### The new way
-$ cf create-service aws-elasticsearch aws-standard prod-selastic-service
+$ cf create-service aws-elasticsearch BETA-es-medium-ha prod-elastic-service
 ```
 
 ### Interacting with an instance
