@@ -5,7 +5,7 @@
 This repository is an example for using the Elasticsearch service in your cloud.gov applications
 from using the `elasticsearch56` service running on the `medium-ha` and `medium` plans to the
 `elasticsearch-aws` service running on the `aws-elasticsearch-prod` and `aws-elasticsearch-dev` plans powered by
-[AWS Elastisearch](https://aws.amazon.com/elasticsearch-service/). The new AWS Elasticsearch services provides customers with access the Elasticsearch v7.4; upgrading the current Elasticsearch offering from v5.4.
+[AWS Elastisearch](https://aws.amazon.com/elasticsearch-service/). The new AWS Elasticsearch services provides customers with access the Elasticsearch v7.4.
 
 ## Major differences
 
