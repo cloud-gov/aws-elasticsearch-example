@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+from cfenv import AppEnv
+from elasticsearch import Elasticsearch, RequestsHttpConnection
+from requests_aws4auth import AWS4Auth
+
+SERVICE = "es"
+REGION = "us-gov-west-1"
+
+
+# Setup cli
+parser = argparse.ArgumentParser(description="Loading you Elasticsearch service.",)
+
+
+subparsers = parser.add_subparsers(
+    dest="command", help="Run <command> help for more information."
+)
+
+## Elasticsearch load command
+parser_delete_indices = subparsers.add_parser(
+    "delete-indices", help="Delete elasticsearch services index with sample document."
+)
+
+
+parser_delete_indices.add_argument(
+    "-s",
+    "--service",
+    dest="service_name",
+    type=str,
+    help="The name of the elasticsearch service",
+    required=True,
+)
+
+## Elasticsearch load command
+parser_load = subparsers.add_parser(
+    "load", help="Load elasticsearch services with sample document."
+)
+
+
+parser_load.add_argument(
+    "-s",
+    "--service",
+    dest="service_name",
+    type=str,
+    help="The name of the elasticsearch service",
+    required=True,
+)
+
+
+# Small example document to load
+index = "movies"
+doc_type = "doc"
+id = "5"
+document = {"title": "Moneyball", "director": "Bennett Miller", "year": "2011"}
+
+
+def get_es_credentials(service_name):
+    """
+    Get elasticsearch credentials via the service name.
+    """
+    env = AppEnv()
+    service = env.get_service(name=service_name)
+    return service.credentials
+
+
+def create_client(service_name):
+    """
+    Creates an elasticsearch client from the service name of
+    the legacy Elasticsearch service or the new AWS Elasticsearch
+    service based on the credentials supplied to the service.
+    """
+
+    try:
+        credentials = get_es_credentials(service_name)
+
+        ## If the username and password is supplied in the service credentials
+        ## Create an Elasticsearch client for the old, kubernetes-broker service
+        if "username" in credentials and "password" in credentials:
+
+            ##  Note:
+            ##      The old service only needs to set the "host" value
+            ##      for the Elasticsearch client "hosts" argument based on the service's
+            ##      "URI" value in the "credentials"
+            uri = credentials["uri"]
+            client = Elasticsearch(hosts=[uri], use_ssl=False, verify_certs=False)
+
+            return {"client": client, "broker": "kubernetes-broker"}
+
+        ## Else, if create an Elasticsearch client for the new, aws-broker service
+        else:
+            ##  Note:
+            ##      The new AWS Elasticsearch service needs to set the "host" and "port"
+            ##      for the Elasticsearch client "hosts" argument with addition to
+            ##      the "access_key", "secret_key", "region", and "service" to create the
+            ##      Elasticsearch client "http_auth" argument.
+            host = credentials["host"]
+            port = credentials["port"]
+            access_key = credentials["access_key"]
+            secret_key = credentials["secret_key"]
+
+            ##  Note:
+            ##      Creates the "http_auth" value for the Elasticsearch client
+            aws_auth = AWS4Auth(access_key, secret_key, REGION, SERVICE)
+
+            ##  Note:
+            ##      Along with the "hosts" and "http_auth" arguments for the Elasticsearch client,
+            ##      you will also need to set the "use_ssl", "verify_certs", and "connection_class"
+            ##      to the following.
+            client = Elasticsearch(
+                hosts=[{"host": host, "port": port}],
+                http_auth=aws_auth,
+                use_ssl=True,
+                verify_certs=True,
+                connection_class=RequestsHttpConnection,
+            )
+
+            return {"client": client, "broker": "aws-broker"}
+    except Exception as err:
+        print("An error occurred trying to create Elasticsearch client.")
+        sys.exit(err)
+
+
+class ESClient:
+    def __init__(self, service_name):
+        service_client = create_client(service_name)
+
+        self.client = service_client["client"]
+        self.broker = service_client["broker"]
+
+    def index_and_get(self, options=dict()):
+        """
+        Use an elasticsearch client to create an index then
+        print the results of getting that index.
+        """
+        client = self.client
+        broker = self.broker
+
+        client.index(**options)
+
+        result = client.get(
+            index=options["index"], doc_type=options["doc_type"], id=options["id"]
+        )
+
+        return result
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+
+    sample_data_options = {
+        "index": index,
+        "doc_type": doc_type,
+        "id": id,
+        "body": document,
+    }
+
+    if args.command == "load":
+        try:
+            es_service = ESClient(args.service_name)
+            result = es_service.index_and_get(sample_data_options)
+            print(result)
+        except Exception as err:
+            print("An error occurred while running the load command.")
+            sys.exit(err)
+
+    if args.command == "delete-indices":
+        es_service = ESClient(args.service_name)
+        result = es_service.client.indices.delete(index=sample_data_options["index"])
+        print(result)
