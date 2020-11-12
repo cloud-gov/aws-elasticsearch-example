@@ -48,6 +48,117 @@ parser_load.add_argument(
     required=True,
 )
 
+## Elasticsearch get-all command
+parser_get_all = subparsers.add_parser(
+    "get-all", help="Get all from an index."
+)
+
+
+parser_get_all.add_argument(
+    "-s",
+    "--service",
+    dest="service_name",
+    type=str,
+    help="The name of the elasticsearch service",
+    required=True,
+)
+
+## Elasticsearch get-repositories command
+parser_get_repositories = subparsers.add_parser(
+    "get-repositories", help="Get Repositories from elasticsearch"
+)
+
+
+parser_get_repositories.add_argument(
+    "-s",
+    "--service",
+    dest="service_name",
+    type=str,
+    help="The name of the elasticsearch service",
+    required=True,
+)
+
+## Elasticsearch get-repository command
+parser_get_repository = subparsers.add_parser(
+    "get-repository", help="Get repository info from elasticsearch given the name"
+)
+
+
+parser_get_repository.add_argument(
+    "-s",
+    "--service",
+    dest="service_name",
+    type=str,
+    help="The name of the elasticsearch service",
+    required=True,
+)
+
+parser_get_repository.add_argument(
+    "-r",
+    "--repository",
+    dest="repository_name",
+    type=str,
+    help="The name of the elasticsearch repository",
+    required=True,
+)
+
+## Elasticsearch get-snapshots command
+parser_get_snapshots = subparsers.add_parser(
+    "get-snapshots", help="Get snapshots from elasticsearch given the repository name"
+)
+
+
+parser_get_snapshots.add_argument(
+    "-s",
+    "--service",
+    dest="service_name",
+    type=str,
+    help="The name of the elasticsearch service",
+    required=True,
+)
+
+parser_get_snapshots.add_argument(
+    "-r",
+    "--repository",
+    dest="repository_name",
+    type=str,
+    help="The name of the elasticsearch repository",
+    required=True,
+)
+
+## Elasticsearch restore-snapshot command
+parser_restore_snapshot = subparsers.add_parser(
+    "restore-snapshot", help="Restore snapshots from elasticsearch given the repository name and snapshot name"
+)
+
+
+parser_restore_snapshot.add_argument(
+    "-s",
+    "--service",
+    dest="service_name",
+    type=str,
+    help="The name of the elasticsearch service",
+    required=True,
+)
+
+parser_restore_snapshot.add_argument(
+    "-r",
+    "--repository",
+    dest="repository_name",
+    type=str,
+    help="The name of the elasticsearch repository",
+    required=True,
+)
+
+parser_restore_snapshot.add_argument(
+    "-n",
+    "--name",
+    dest="snapshot_name",
+    type=str,
+    help="The name of the elasticsearch snapshot name",
+    required=True,
+)
+
 
 # Small example document to load
 index = "movies"
@@ -96,7 +207,6 @@ def create_client(service_name):
             ##      the "access_key", "secret_key", "region", and "service" to create the
             ##      Elasticsearch client "http_auth" argument.
             host = credentials["host"]
-            port = credentials["port"]
             access_key = credentials["access_key"]
             secret_key = credentials["secret_key"]
 
@@ -109,7 +219,7 @@ def create_client(service_name):
             ##      you will also need to set the "use_ssl", "verify_certs", and "connection_class"
             ##      to the following.
             client = Elasticsearch(
-                hosts=[{"host": host, "port": port}],
+                hosts=[{"host": host, "port": "443"}],
                 http_auth=aws_auth,
                 use_ssl=True,
                 verify_certs=True,
@@ -154,6 +264,7 @@ if __name__ == "__main__":
         "doc_type": doc_type,
         "id": id,
         "body": document,
+        "timeout": "7s",
     }
 
     if args.command == "load":
@@ -169,3 +280,45 @@ if __name__ == "__main__":
         es_service = ESClient(args.service_name)
         result = es_service.client.indices.delete(index=sample_data_options["index"])
         print(result)
+
+
+    if args.command == "get-all":
+        es_service = ESClient(args.service_name)
+        result = es_service.client.search(index=sample_data_options["index"])
+        print(result)
+
+    if args.command == "get-repositories":
+        try:
+            es_service = ESClient(args.service_name)
+            result = es_service.client.cat.repositories()
+            print(result)
+        except Exception as err:
+            print("An error occurred while running the load command.")
+            sys.exit(err)
+
+    if args.command == "get-repository":
+        try:
+            es_service = ESClient(args.service_name)
+            result = es_service.client.snapshot.get_repository(repository=args.repository_name)
+            print(result)
+        except Exception as err:
+            print("An error occurred while running the load command.")
+            sys.exit(err)
+
+    if args.command == "get-snapshots":
+        try:
+            es_service = ESClient(args.service_name)
+            result = es_service.client.cat.snapshots(repository=args.repository_name,master_timeout="5s")
+            print(result)
+        except Exception as err:
+            print("An error occurred while running the load command.")
+            sys.exit(err)
+
+    if args.command == "restore-snapshot":
+        try:
+            es_service = ESClient(args.service_name)
+            result = es_service.client.snapshot.restore(repository=args.repository_name,snapshot=args.snapshot_name,master_timeout="7s")
+            print(result)
+        except Exception as err:
+            print("An error occurred while running the load command.")
+            sys.exit(err)

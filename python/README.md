@@ -90,3 +90,33 @@ $ cf logs --recent elastic-tasks
 # Output
 # [APP/TASK/5d07a14f/0] OUT {'acknowledged': True}
 ```
+
+Get all datas from sample index
+
+```bash
+$ cf run-task elastic-tasks "./run get-all -s new-es-service"
+```
+
+Get all backup repositiories
+
+```bash
+$ cf run-task elastic-tasks "./run get-repositories -s new-es-service"
+```
+
+Get all info about a specific repository
+
+```bash
+$ cf run-task elastic-tasks "./run get-repository -s new-es-service -r s3-repositiory-name"
+```
+
+Get all snapshots for a specific repository
+
+```bash
+$ cf run-task elastic-tasks "./run get-snapshots -s new-es-service -r s3-repositiory-name"
+```
+
+Get restore from a specific snapshot
+
+```bash
+$ cf run-task elastic-tasks "./run restore-snapshot -s new-es-service -r s3-repositiory-name -n snapshot-name"
+```
