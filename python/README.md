@@ -75,7 +75,7 @@ Deleting the sample index
 
 ```bash
 ## Run the task and all the run script
-$ cf run-task elastic-tasks "./run delete-indices -s new-es-service"
+$ cf run-task elastic-tasks --command "./run delete-indices -s new-es-service"
 # Output
 # Creating task for app elastic-tasks in org my-org / space my-space as admin...
 # OK
@@ -94,29 +94,29 @@ $ cf logs --recent elastic-tasks
 Get all datas from sample index
 
 ```bash
-$ cf run-task elastic-tasks "./run get-all -s new-es-service"
+$ cf run-task elastic-tasks --command "./run get-all -s new-es-service"
 ```
 
 Get all backup repositiories
 
 ```bash
-$ cf run-task elastic-tasks "./run get-repositories -s new-es-service"
+$ cf run-task elastic-tasks --command "./run get-repositories -s new-es-service"
 ```
 
 Get all info about a specific repository
 
 ```bash
-$ cf run-task elastic-tasks "./run get-repository -s new-es-service -r s3-repositiory-name"
+$ cf run-task elastic-tasks --command "./run get-repository -s new-es-service -r s3-repositiory-name"
 ```
 
 Get all snapshots for a specific repository
 
 ```bash
-$ cf run-task elastic-tasks "./run get-snapshots -s new-es-service -r s3-repositiory-name"
+$ cf run-task elastic-tasks --command "./run get-snapshots -s new-es-service -r s3-repositiory-name"
 ```
 
 Get restore from a specific snapshot
 
 ```bash
-$ cf run-task elastic-tasks "./run restore-snapshot -s new-es-service -r s3-repositiory-name -n snapshot-name"
+$ cf run-task elastic-tasks --command "./run restore-snapshot -s new-es-service -r s3-repositiory-name -n snapshot-name"
 ```
